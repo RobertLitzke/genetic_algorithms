@@ -1,34 +1,28 @@
 from random import randint, random
-import pdb
+#Max allowed number
+MAX_CONST=20
 #These 'constants' will be treated as operations
-operations = { 10:'-', 11:'+', 12:'/', 13:'*', 14:'%' }
-#Nulls are handled ok (15 will be invalid)
-MAX_NUM=15
-#The highest digit allowed
-MAX_CONST=9
-
-#Replace gene numbers with constants
-def set_operations(val):
-	if val<=MAX_CONST:
-		return val
-	if operations.has_key(val):
-		return operations[val]
-	return None
+operations = { MAX_CONST+1:'-', MAX_CONST+2:'+', MAX_CONST+3:'/', MAX_CONST+4:'*', MAX_CONST+5:'%' }
+MAX_NUM = MAX_CONST+len(operations)
 
 #Turns a genome into an expression
 def build_expr(genome):
 	nodes = [set_operations(gene) for gene in genome]
-	no_null = [node for node in nodes if node!=None]
 	out = []
 	prev = None
 	#Strip out repeats up-front, eg: '6 6 +' or '* * 9'
-	for node in no_null:
+	for node in nodes:
 		if type(prev) != type(node):
 			out.append(node)
 		prev = node
 	#Return a string that can be evaluated
 	return ' '.join([str(x) for x in out])
 
+#Replace gene numbers with constants
+def set_operations(val):
+	if val<=MAX_CONST:
+		return val
+	return operations[val]
 
 #Try/Catch to determine if the expression will live
 def is_viable(genome):
@@ -41,7 +35,6 @@ def is_viable(genome):
 #Generate a completely random genome
 def generate(genome_length):
 	y=[randint(0,MAX_NUM) for x in xrange(genome_length)]
-	#pdb.set_trace()
 	return y
 
 #Initialiazes a full generation of viable genomes
@@ -49,12 +42,11 @@ def initialize_generation(genome_length,pop_size):
 	result = []
 	while len(result) < pop_size:
 		genome = generate(genome_length)
-		print genome
 		if is_viable(genome):
 			result.append(genome)
 	return result
 
-#Determines teh fitness of genes. The close to the target, the higher the result
+#Determines the fitness of genes. The close to the target, the higher the result
 def fitness(genes,target):
 	expr = build_expr(genes)
 	#1+abs() to prevent divide-by-0
@@ -121,7 +113,7 @@ def print_gen(gen_count,genomes,target):
 	* mutation_rate - what percent of genes mutate?
 	* target - what should the expression evaluate to?
 '''
-def harness(runs,genome_length,pop_size,survivor_count,mutation_rate,target):
+def harness(runs=100,genome_length=40,pop_size=20,survivor_count=5,mutation_rate=.1,target=500):
 	population = initialize_generation(genome_length,pop_size)		#Initialize the herd
 	for i in xrange(runs):
 		survivors = roulette(population,survivor_count,target) 		#Cull the herd!
@@ -131,3 +123,5 @@ def harness(runs,genome_length,pop_size,survivor_count,mutation_rate,target):
 		if len(a)>0:
 			break
 	print_gen('Complete',population,target) 						#Print the final generation
+
+harness()
